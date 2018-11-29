@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# Enablig debug if DEBUG environment variable
+${DEBUG:+set -x}
+
+SERVICE="${1:-}"
+ACTION="${2:-}"
+
+if ! [ -z "${DEBUG:-}" ]; then echo "Got called with $*" >> debug.txt; fi
+
+if [ "$SERVICE" == "configure" ]; then
+	if [ "$ACTION" == "list" ]; then
+		echo '      Name                    Value             Type    Location'
+		echo '      ----                    -----             ----    --------'
+		echo '   profile                <not set>             None    None'
+		echo 'access_key                <not set>             None    None'
+		echo 'secret_key                <not set>             None    None'
+		echo '    region                <not set>             None    None'
+		exit 0
+	fi
+fi
+
+if [ "$SERVICE" == "ec2" ]; then
+	# Example: aws ec2 run-instances --query 'Instances[0].InstanceId'
+	if [ "$ACTION" == "run-instances" ]; then
+		echo '"i-123456789"'
+		exit 0
+	fi
+
+	# Example: aws ec2 create-tags --tags 'Key=Name,Value=the ultimate power in the universe' \
+	#   --resources i-123456789
+	if [ "$ACTION" == "create-tags" ]; then
+		echo ""
+		exit 0
+	fi
+
+	# Example: aws ec2 describe-instance-status
+	if [ "$ACTION" == "describe-instance-status" ]; then
+		# echo "initializing" > .describe-instance-status to change response
+		if [ -f ".describe-instance-status" ]; then
+			cat ".describe-instance-status"
+		else
+			echo "ok"
+		fi
+		exit 0
+	fi
+
+	if [ "$ACTION" == "describe-instances" ]; then
+		echo "127.1.2.3      10.1.2.3      running"
+		exit 0
+	fi
+fi
+
+if [ "$SERVICE" == "elb" ]; then
+	# Example: aws elb register-instances-with-load-balancer \
+	#   --load-balancer-name "the-empire" --instances i-123456789
+	if [ "$ACTION" == "register-instances-with-load-balancer" ]; then
+		echo ""
+		exit 0
+	fi
+fi
+
+if [ "$SERVICE" == "elbv2" ]; then
+	if [ "$ACTION" == "register-targets" ]; then
+		# Example: aws elbv2 register-targets --target-group-arn arn:1d95 \
+		#   --targets Id=i-123456789
+		echo ""
+		exit 0
+	fi
+fi
+
+echo "ERROR... invalid option for mock aws.  currently supports: "
+echo "  configure list"
+echo "  ec2 run-instances"
+echo "  ec2 create-tags"
+echo "  ect describe-instances "
+echo "  ec2 describe-instance-status"
+echo "  elb register-instances-with-load-balancer"
+echo "  elbv2 register-targets"
+exit 1
